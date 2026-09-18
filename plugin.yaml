@@ -1,0 +1,13 @@
+name: typesafe-jev-gate
+version: 0.1.0
+description: Use TypeSafe Jev as a fail-closed decision gate for side-effecting Hermes tool calls.
+author: Russley
+requires_env:
+  - name: OPENROUTER_API_KEY
+    description: OpenRouter API key for Jev evaluations
+    url: https://openrouter.ai/keys
+    secret: true
+provides_hooks:
+  - pre_tool_call
+  - pre_llm_call
+  - post_tool_call
