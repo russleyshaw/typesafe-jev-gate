@@ -1,0 +1,20 @@
+[project]
+name = "typesafe-jev-gate"
+version = "0.2.0"
+description = "OpenRouter Jev policy hooks for Hermes Agent"
+requires-python = ">=3.11"
+dependencies = ["httpx>=0.28,<1"]
+
+[project.optional-dependencies]
+test = ["pytest>=8,<10", "ruff>=0.16,<0.17"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-q", "--confcutdir=tests"]

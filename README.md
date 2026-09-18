@@ -17,6 +17,22 @@ A Hermes plugin that uses TypeSafe Jev as an additional policy signal before sid
 
 Hermes hardline blocks and its existing authorization remain authoritative. Jev is not a replacement for either.
 
+## Architecture
+
+- `config.py` — policy constants and limits.
+- `redaction.py` — tool classification, secret redaction, fingerprints, and safe action summaries.
+- `client.py` — OpenRouter Decisions API client and short-lived cache.
+- `policy.py` — Jev request payloads and response parsing.
+- `budget.py` — per-turn repetition and side-effect budgets.
+- `hooks.py` — Hermes hook adapters and approval directives.
+- `__init__.py` — minimal plugin entry point.
+
+Run linting with:
+
+```bash
+uv run --with 'ruff>=0.16,<0.17' ruff check .
+```
+
 ## Enable
 
 1. Use the existing OpenRouter API key or create one at <https://openrouter.ai/keys>.

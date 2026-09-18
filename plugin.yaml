@@ -1,5 +1,5 @@
 name: typesafe-jev-gate
-version: 0.1.0
+version: 0.2.0
 description: Use TypeSafe Jev as a fail-closed decision gate for side-effecting Hermes tool calls.
 author: Russley
 requires_env:
