@@ -67,11 +67,7 @@ def route_turn(user_message: str = "", **kwargs: Any) -> str | None:
         if not choice:
             return None
         audit({"outcome": "route_hint", "route": choice})
-        return (
-            f"Advisory execution route from Jev: {choice}. "
-            "Use this only to avoid unnecessary work; follow the user's request "
-            "and Hermes approvals."
-        )
+        return f"Jev route hint: {choice}. Advisory only; obey user and Hermes approvals."
     except Exception as exc:
         LOGGER.warning("Jev route hint unavailable: %s", exc)
         return None
