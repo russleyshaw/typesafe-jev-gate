@@ -50,7 +50,40 @@ def test_registers_hooks(plugin):
 
     context = Context()
     register(context)
-    assert [name for name, _ in context.hooks] == ["pre_tool_call", "pre_llm_call", "post_tool_call"]
+    assert [name for name, _ in context.hooks] == [
+        "pre_tool_call", "pre_llm_call", "transform_tool_result", "post_tool_call",
+    ]
+
+
+def test_pre_compaction_pass_removes_only_ephemeral_lines(plugin):
+    from typesafe_jev_gate.hooks import compact_tool_result_hook
+
+    result = "⠋ working\nProcessing...\nimportant result\n[####] 50%\n"
+    assert compact_tool_result_hook(result) == "important result\n"
+    preserved = "Processing 12 files\nreal output\n"
+    assert compact_tool_result_hook(preserved) == preserved
+
+
+def test_pre_compaction_pass_removes_aggressive_process_statuses(plugin):
+    from typesafe_jev_gate.hooks import compact_tool_result_hook
+
+    result = (
+        "Running tests\n"
+        "Process started: pid 42\n"
+        "Process exited with code 0\n"
+        "Exit code: 0\n"
+        "✓ Done\n"
+        "test_failure: expected 1, got 2\n"
+    )
+    assert compact_tool_result_hook(result) == "test_failure: expected 1, got 2\n"
+    assert compact_tool_result_hook("Process exited with code 1\n") == "Process exited with code 1\n"
+
+
+def test_pre_compaction_pass_leaves_non_text_results_untouched(plugin):
+    from typesafe_jev_gate.hooks import compact_tool_result_hook
+
+    value = {"output": "working..."}
+    assert compact_tool_result_hook(value) is value
 
 
 def test_fast_path_skips_jev(plugin, monkeypatch):

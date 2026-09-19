@@ -7,6 +7,7 @@ from typing import Any
 
 from .audit import audit
 from .budget import BUDGET
+from .compaction import compact_tool_result
 from .config import PAID_TOOLS
 from .policy import _noul, evaluate_tool, risk, route_request
 from .redaction import action_summary, is_safe_fast_path, is_side_effecting
@@ -79,10 +80,17 @@ def audit_tool_call(tool_name: str, status: str = "", **kwargs: Any) -> None:
         audit({"tool": tool_name, "outcome": "completed", "status": status})
 
 
+def compact_tool_result_hook(result: Any, **kwargs: Any) -> Any:
+    """Strip ephemeral tool-output lines before they enter conversation history."""
+    del kwargs
+    return compact_tool_result(result)
+
+
 def register(ctx: Any) -> None:
     ctx.register_hook("pre_tool_call", jev_gate)
     ctx.register_hook("pre_llm_call", route_turn)
+    ctx.register_hook("transform_tool_result", compact_tool_result_hook)
     ctx.register_hook("post_tool_call", audit_tool_call)
 
 
-__all__ = ["audit_tool_call", "jev_gate", "register", "route_turn"]
+__all__ = ["audit_tool_call", "compact_tool_result_hook", "jev_gate", "register", "route_turn"]

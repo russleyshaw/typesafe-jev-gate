@@ -10,6 +10,7 @@ A Hermes plugin that uses TypeSafe Jev as an additional policy signal before sid
 - Jev decisions are cached briefly to avoid duplicate spend.
 - Paid tools receive stricter preflight treatment.
 - Jev receives compact structured state and question criteria to reduce prompt tokens.
+- An aggressive deterministic pre-compaction pass removes standalone spinner/progress/status lines, successful process-exit markers, and completion acknowledgements from tool output before it enters conversation history and the traditional LLM compactor; substantive output and nonzero failures remain.
 - Ambiguous multi-step requests receive an advisory route hint through `pre_llm_call`.
 - Clear secret-egress or prompt-injection risks are blocked.
 - Irreversible or uncertain calls are escalated to Hermes's normal approval gate.
