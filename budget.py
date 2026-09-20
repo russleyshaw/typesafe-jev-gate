@@ -5,7 +5,7 @@ from __future__ import annotations
 import threading
 from typing import Any
 
-from .config import MAX_REPEATED_CALLS_PER_TURN, MAX_SIDE_EFFECTS_PER_TURN
+from .config import MAX_DECISIONS_PER_TURN, MAX_REPEATED_CALLS_PER_TURN, MAX_SIDE_EFFECTS_PER_TURN
 from .redaction import action_summary, fingerprint
 
 
@@ -34,6 +34,14 @@ class TurnBudget:
                 "action": "approve",
                 "message": (
                     f"Requested action: {action}. Jev budget guard: this action has been repeated too many times."
+                ),
+            }
+        if count > MAX_DECISIONS_PER_TURN:
+            return {
+                "action": "approve",
+                "message": (
+                    f"Requested action: {action}. Jev budget guard: "
+                    "this turn has exceeded its Jev decision budget."
                 ),
             }
         if count > MAX_SIDE_EFFECTS_PER_TURN:

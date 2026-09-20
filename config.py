@@ -8,6 +8,29 @@ MAX_CACHE_ENTRIES = 256
 MAX_SIDE_EFFECTS_PER_TURN = 8
 MAX_REPEATED_CALLS_PER_TURN = 2
 MAX_STRING = 1200
+MAX_CONTEXT_CHARS = 96000
+MAX_DECISIONS_PER_TURN = 4
+MODE_ENV = "HERMES_JEV_MODE"
+DISABLED_ENV = "HERMES_JEV_DISABLED"
+DEFAULT_MODE = "advise"
+
+ALLOWED_MODES = {"observe", "advise", "enforce_narrowly"}
+
+
+def disabled() -> bool:
+    import os
+
+    return os.environ.get(DISABLED_ENV, "").lower() in {"1", "true", "yes"}
+
+
+def mode() -> str:
+    import os
+
+    if disabled():
+        return "observe"
+    value = os.environ.get(MODE_ENV, DEFAULT_MODE)
+    return value if value in ALLOWED_MODES else DEFAULT_MODE
+
 
 SIDE_EFFECT_TOOLS = {
     "terminal",

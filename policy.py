@@ -7,6 +7,8 @@ import json
 from typing import Any
 
 from .client import CLIENT
+from .context import decision_context
+from .decisions import DECISION_SCHEMA_VERSION, validate_route_answers, validate_tool_answers
 from .redaction import redact
 
 
@@ -20,13 +22,14 @@ def risk(answers: dict[str, Any]) -> float | None:
     return float(value) if isinstance(value, (int, float)) else None
 
 
-def evaluate_tool(tool_name: str, args: dict[str, Any]) -> dict[str, Any]:
-    state = {
+def evaluate_tool(tool_name: str, args: dict[str, Any], **hook_kwargs: Any) -> dict[str, Any]:
+    state = decision_context({
         "tool": tool_name,
         "arguments": redact(args),
         "policy": "Protect secrets/private data; approve uncertainty.",
-    }
+    }, hook_kwargs)
     payload = {
+        "schema": f"hermes.tool_policy.v{DECISION_SCHEMA_VERSION}",
         "state": json.dumps(state, sort_keys=True),
         "questions": {
             "no_secret_egress": {"type": "noul", "instructions": "No secret/private data leaves local system."},
@@ -40,17 +43,17 @@ def evaluate_tool(tool_name: str, args: dict[str, Any]) -> dict[str, Any]:
         },
     }
     key = "safety:" + hashlib.sha256(json.dumps(state, sort_keys=True, default=str).encode()).hexdigest()[:24]
-    return CLIENT.decide(key, payload)
+    return validate_tool_answers(CLIENT.decide(key, payload))
 
 
-def route_request(user_message: str) -> dict[str, Any]:
+def route_request(user_message: str, **hook_kwargs: Any) -> dict[str, Any]:
+    state = decision_context({
+        "request": user_message,
+        "policy": "Choose the cheapest reliable route that preserves quality and safety.",
+    }, {"user_message": user_message, **hook_kwargs})
     payload = {
-        "state": redact(
-            {
-                "request": user_message,
-                "policy": "Choose cheapest reliable route.",
-            }
-        ),
+        "schema": f"hermes.route.v{DECISION_SCHEMA_VERSION}",
+        "state": state,
         "questions": {
             "route": {
                 "type": "choice",
@@ -65,8 +68,8 @@ def route_request(user_message: str) -> dict[str, Any]:
             }
         },
     }
-    key = "route:" + hashlib.sha256(user_message.encode()).hexdigest()[:24]
-    return CLIENT.decide(key, payload)
+    key = "route:" + hashlib.sha256(json.dumps(payload["state"], sort_keys=True, default=str).encode()).hexdigest()[:24]
+    return validate_route_answers(CLIENT.decide(key, payload))
 
 
 __all__ = ["_noul", "evaluate_tool", "risk", "route_request"]

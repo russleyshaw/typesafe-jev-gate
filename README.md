@@ -33,6 +33,9 @@ Jev gives Hermes a typed decision signal for those cases. When Jev is unavailabl
 - Applies stricter preflight treatment to paid tools.
 - Caches Jev decisions briefly to avoid duplicate spend.
 - Gives ambiguous multi-step requests an advisory route hint through `pre_llm_call`.
+- Sends the bounded, redacted turn context available to Hermes with each decision, including conversation history, current model, platform, user message, tool schema, and eligible tool context.
+- Validates every typed response against a versioned decision contract before policy code sees it.
+- Supports `observe`, `advise`, and `enforce_narrowly` rollout modes plus an emergency `HERMES_JEV_DISABLED=1` network kill switch.
 - Blocks clear secret-egress and prompt-injection risks.
 - Sends irreversible or uncertain calls to Hermes's normal approval gate.
 - Writes metadata-only audit records to `$HERMES_HOME/logs/jev-gate.jsonl`.
@@ -77,11 +80,13 @@ The gate can recommend allow, deny, or approval. It cannot override Hermes's exi
 
 | File | Role |
 | --- | --- |
-| `config.py` | Policy constants and limits |
+| `config.py` | Policy constants, context limits, rollout mode, and kill switch |
 | `redaction.py` | Tool classification, secret redaction, fingerprints, and safe action summaries |
+| `context.py` | Bounded, redacted runtime context assembly |
+| `decisions.py` | Versioned typed-choice and score validation |
 | `client.py` | OpenRouter Decisions API client and short-lived cache |
-| `policy.py` | Jev request payloads and response parsing |
-| `budget.py` | Per-turn repetition and side-effect budgets |
+| `policy.py` | Jev request payloads and validated response parsing |
+| `budget.py` | Per-turn Jev, repetition, and side-effect budgets |
 | `hooks.py` | Hermes hook adapters and approval directives |
 | `__init__.py` | Minimal plugin entry point |
 

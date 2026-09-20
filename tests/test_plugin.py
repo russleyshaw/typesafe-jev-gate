@@ -141,3 +141,76 @@ def test_route_hint_is_advisory(plugin, monkeypatch):
     assert hooks.route_turn("say hello") is None
     hint = hooks.route_turn("Integrate several systems and automate a multi-step deployment workflow")
     assert "cheap_model" in hint
+
+
+def test_route_decision_receives_bounded_turn_context(plugin, monkeypatch):
+    from typesafe_jev_gate import client, hooks
+
+    calls = []
+
+    def post(url, **kwargs):
+        calls.append(kwargs["json"])
+        return Response({"route": {"choice": "agent"}})
+
+    client.CLIENT._post = post
+    history = [{"role": "user", "content": "Earlier requirement"}, {"role": "assistant", "content": "Earlier answer"}]
+    hooks.route_turn(
+        "Integrate several systems and automate a multi-step deployment workflow",
+        conversation_history=history,
+        model="main-model",
+        platform="discord",
+        session_id="session-1",
+        turn_id="turn-1",
+    )
+    state = json.dumps(calls[0]["state"])
+    assert "Earlier requirement" in state
+    assert "main-model" in state
+    assert "discord" in state
+    assert "session-1" not in state
+
+
+def test_context_keeps_recent_history_after_long_turn(plugin, monkeypatch):
+    from typesafe_jev_gate import client, hooks
+
+    calls = []
+
+    def post(url, **kwargs):
+        calls.append(kwargs["json"])
+        return Response({"route": {"choice": "agent"}})
+
+    client.CLIENT._post = post
+    history = [{"role": "user", "content": f"message-{index}"} for index in range(100)]
+    hooks.route_turn(
+        "Integrate several systems and automate a multi-step deployment workflow",
+        conversation_history=history,
+    )
+    state = json.dumps(calls[0]["state"])
+    assert "message-0" in state
+    assert "message-99" in state
+
+
+def test_tool_decision_receives_turn_context(plugin, monkeypatch):
+    from typesafe_jev_gate import client, hooks
+
+    calls = []
+
+    def post(url, **kwargs):
+        calls.append(kwargs["json"])
+        return Response(answers())
+
+    client.CLIENT._post = post
+    hooks.jev_gate(
+        "write_file",
+        {"path": "/tmp/a", "content": "x"},
+        user_message="Please update the deployment manifest",
+        conversation_history=[{"role": "user", "content": "Keep production untouched"}],
+        model="main-model",
+        platform="discord",
+        session_id="session-1",
+        turn_id="turn-1",
+    )
+    state = calls[0]["state"]
+    assert "Keep production untouched" in state
+    assert "Please update the deployment manifest" in state
+    assert "main-model" in state
+    assert "session-1" not in state
