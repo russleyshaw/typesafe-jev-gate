@@ -126,4 +126,8 @@ Hermes Agent, Jev, TypeSafe, AI safety, agent safety, tool authorization, tool c
 
 ## License
 
-See the repository for license details.
+This project is licensed under the [MIT License](LICENSE).
+
+## Hermes catalog submission
+
+This repository is prepared for submission to the Hermes community plugin catalog. The catalog entry must pin an exact reviewed commit SHA and declare the plugin's hooks, environment variables, and other capabilities. See [CONTRIBUTING.md](CONTRIBUTING.md) for the submission and release workflow.

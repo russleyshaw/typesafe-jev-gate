@@ -13,16 +13,11 @@ All notable changes to the TypeSafe Jev Gate plugin are documented here.
 - Added a negative provider-failure cache to prevent retry storms.
 - Added privacy-safe p50/p95 telemetry aggregation from metadata-only audit records.
 - Added a small redacted offline routing corpus and deterministic evaluation.
+- Added MIT licensing, manifest v2 metadata, security reporting guidance, and contribution/release instructions.
+- Added GitHub Actions checks for tests, Ruff, and the offline evaluation.
 
 ### Changed
 
 - Added decision latency and schema metadata to audit records.
-- Added deterministic fallbacks for unavailable lifecycle decisions.
-- Expanded the documented architecture and development commands.
-- Bumped the plugin and Python package version to `0.4.0`.
 
-### Verification
-
-- 18 tests pass.
-- Ruff formatting and lint checks pass.
-- The roadmap contracts are implemented without allowing Jev to override Hermes hardline blocks or normal approvals.
+**Submission note:** The catalog entry must pin the full SHA of this release and be merged by a Hermes maintainer.
