@@ -138,9 +138,27 @@ def test_route_hint_is_advisory(plugin, monkeypatch):
     from typesafe_jev_gate import client, hooks
 
     client.CLIENT._post = lambda *a, **k: Response({"route": {"choice": "cheap_model"}})
-    assert hooks.route_turn("say hello") is None
+    assert hooks.route_turn("say hello") is not None
     hint = hooks.route_turn("Integrate several systems and automate a multi-step deployment workflow")
     assert "cheap_model" in hint
+
+
+def test_preflight_plan_contains_all_choice_contracts(plugin, monkeypatch):
+    from typesafe_jev_gate import client, hooks
+
+    captured = []
+
+    def post(url, **kwargs):
+        captured.append(kwargs["json"])
+        return Response({"route": {"choice": "agent"}})
+
+    client.CLIENT._post = post
+    hooks.route_turn("Research this and decide whether to delegate the work")
+    assert {
+        "route", "toolset", "tool_search", "context", "compression", "memory", "skills",
+        "delegation", "parallelism", "retry", "clarification", "completion",
+    } <= set(captured[0]["questions"])
+    assert captured[0]["schema"] == "hermes.turn_plan.v1"
 
 
 def test_route_decision_receives_bounded_turn_context(plugin, monkeypatch):

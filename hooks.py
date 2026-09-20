@@ -8,7 +8,8 @@ from typing import Any
 from .audit import audit
 from .budget import BUDGET
 from .config import PAID_TOOLS, disabled, mode
-from .policy import _noul, evaluate_tool, risk, route_request
+from .planner import plan_turn
+from .policy import _noul, evaluate_tool, risk
 from .redaction import action_summary, is_jev_candidate, is_safe_fast_path
 
 LOGGER = logging.getLogger("hermes.plugins.typesafe-jev-gate")
@@ -68,19 +69,25 @@ def route_turn(user_message: str = "", **kwargs: Any) -> str | None:
     if disabled():
         return None
     text = str(user_message or "").strip()
-    markers = ("build", "debug", "deploy", "research", "compare", "multiple", "integrate", "automate")
-    if len(text) < 160 and not any(marker in text.lower() for marker in markers):
+    if not text:
         return None
     try:
-        choice = route_request(text, **kwargs).get("route", {}).get("choice")
-        if not choice:
+        answers = plan_turn(text, **kwargs)
+        choices = {
+            name: value.get("choice")
+            for name, value in answers.items()
+            if isinstance(value, dict) and value.get("choice")
+        }
+        route = choices.get("route")
+        if not route:
             return None
-        audit({"outcome": "route_hint", "route": choice, "mode": mode()})
+        audit({"outcome": "turn_plan", "route": route, "choices": sorted(choices), "mode": mode()})
         if mode() == "observe":
             return None
-        return f"Jev route hint: {choice}. Advisory only; obey user and Hermes approvals."
+        summary = ", ".join(f"{name}={value}" for name, value in choices.items())
+        return f"Jev preflight choices: {summary}. Advisory only; obey user and Hermes approvals."
     except Exception as exc:
-        LOGGER.warning("Jev route hint unavailable: %s", exc)
+        LOGGER.warning("Jev preflight plan unavailable: %s", exc)
         return None
 
 

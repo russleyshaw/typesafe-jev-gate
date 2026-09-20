@@ -32,7 +32,8 @@ Jev gives Hermes a typed decision signal for those cases. When Jev is unavailabl
 - Escalates repeated calls and excessive side effects in one turn.
 - Applies stricter preflight treatment to paid tools.
 - Caches Jev decisions briefly to avoid duplicate spend.
-- Gives ambiguous multi-step requests an advisory route hint through `pre_llm_call`.
+- Runs one typed preflight plan before every non-empty main-LLM turn through `pre_llm_call`, covering route, toolset, context, compression, memory, skills, delegation, and retry choices.
+- Gives the main model an advisory decision brief so it can choose the smallest useful context and tool path.
 - Sends the bounded, redacted turn context available to Hermes with each decision, including conversation history, current model, platform, user message, tool schema, and eligible tool context.
 - Validates every typed response against a versioned decision contract before policy code sees it.
 - Supports `observe`, `advise`, and `enforce_narrowly` rollout modes plus an emergency `HERMES_JEV_DISABLED=1` network kill switch.
@@ -84,6 +85,7 @@ The gate can recommend allow, deny, or approval. It cannot override Hermes's exi
 | `redaction.py` | Tool classification, secret redaction, fingerprints, and safe action summaries |
 | `context.py` | Bounded, redacted runtime context assembly |
 | `decisions.py` | Versioned typed-choice and score validation |
+| `planner.py` | One-call pre-main-LLM route, context, tool, memory, skill, delegation, and retry choices |
 | `client.py` | OpenRouter Decisions API client and short-lived cache |
 | `policy.py` | Jev request payloads and validated response parsing |
 | `budget.py` | Per-turn Jev, repetition, and side-effect budgets |
