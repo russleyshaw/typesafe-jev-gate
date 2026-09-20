@@ -50,40 +50,7 @@ def test_registers_hooks(plugin):
 
     context = Context()
     register(context)
-    assert [name for name, _ in context.hooks] == [
-        "pre_tool_call", "pre_llm_call", "transform_tool_result", "post_tool_call",
-    ]
-
-
-def test_pre_compaction_pass_removes_only_ephemeral_lines(plugin):
-    from typesafe_jev_gate.hooks import compact_tool_result_hook
-
-    result = "⠋ working\nProcessing...\nimportant result\n[####] 50%\n"
-    assert compact_tool_result_hook(result) == "important result\n"
-    preserved = "Processing 12 files\nreal output\n"
-    assert compact_tool_result_hook(preserved) == preserved
-
-
-def test_pre_compaction_pass_removes_aggressive_process_statuses(plugin):
-    from typesafe_jev_gate.hooks import compact_tool_result_hook
-
-    result = (
-        "Running tests\n"
-        "Process started: pid 42\n"
-        "Process exited with code 0\n"
-        "Exit code: 0\n"
-        "✓ Done\n"
-        "test_failure: expected 1, got 2\n"
-    )
-    assert compact_tool_result_hook(result) == "test_failure: expected 1, got 2\n"
-    assert compact_tool_result_hook("Process exited with code 1\n") == "Process exited with code 1\n"
-
-
-def test_pre_compaction_pass_leaves_non_text_results_untouched(plugin):
-    from typesafe_jev_gate.hooks import compact_tool_result_hook
-
-    value = {"output": "working..."}
-    assert compact_tool_result_hook(value) is value
+    assert [name for name, _ in context.hooks] == ["pre_tool_call", "pre_llm_call", "post_tool_call"]
 
 
 def test_fast_path_skips_jev(plugin, monkeypatch):
@@ -112,6 +79,30 @@ def test_redaction_and_cache(plugin, monkeypatch):
     assert "secret-token" not in payload
     assert "hidden" not in payload
     assert "[REDACTED]" in payload
+
+
+def test_paid_external_tools_are_evaluated(plugin, monkeypatch):
+    from typesafe_jev_gate import client, hooks
+
+    calls = []
+
+    def post(url, **kwargs):
+        calls.append(kwargs)
+        return Response(answers())
+
+    client.CLIENT._post = post
+    assert hooks.jev_gate("web_search", {"query": "weather"}) is None
+    assert hooks.jev_gate("web_extract", {"urls": ["https://example.com"]}) is None
+    assert len(calls) == 2
+
+
+def test_paid_tool_risk_escalates(plugin, monkeypatch):
+    from typesafe_jev_gate import client, hooks
+
+    client.CLIENT._post = lambda *a, **k: Response(answers(risk=1.8))
+    directive = hooks.jev_gate("web_search", {"query": "buy this"})
+    assert directive["action"] == "approve"
+    assert "search the web" in directive["message"]
 
 
 def test_risky_and_unavailable_calls_escalate(plugin, monkeypatch):

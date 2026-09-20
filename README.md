@@ -28,13 +28,13 @@ Jev gives Hermes a typed decision signal for those cases. When Jev is unavailabl
 
 - Lets read-only tools and obvious safe terminal commands pass without a network call.
 - Evaluates side-effecting tools with redacted, bounded arguments.
+- Evaluates paid/external tools such as web search and extraction before they leave the process.
 - Escalates repeated calls and excessive side effects in one turn.
 - Applies stricter preflight treatment to paid tools.
 - Caches Jev decisions briefly to avoid duplicate spend.
 - Gives ambiguous multi-step requests an advisory route hint through `pre_llm_call`.
 - Blocks clear secret-egress and prompt-injection risks.
 - Sends irreversible or uncertain calls to Hermes's normal approval gate.
-- Removes standalone progress noise during aggressive pre-compaction while preserving substantive output and failures.
 - Writes metadata-only audit records to `$HERMES_HOME/logs/jev-gate.jsonl`.
 
 ## Quick start
@@ -83,7 +83,6 @@ The gate can recommend allow, deny, or approval. It cannot override Hermes's exi
 | `policy.py` | Jev request payloads and response parsing |
 | `budget.py` | Per-turn repetition and side-effect budgets |
 | `hooks.py` | Hermes hook adapters and approval directives |
-| `compaction.py` | Deterministic pre-compaction cleanup |
 | `__init__.py` | Minimal plugin entry point |
 
 ## Development
@@ -102,7 +101,7 @@ uv run --with 'ruff>=0.16,<0.17' ruff check .
 
 ## Project status
 
-This plugin is experimental. Review the policy behavior and audit output before enabling it in a production Hermes profile. The project is intentionally conservative: when in doubt, it asks Hermes to ask you.
+This plugin is experimental and currently tracks the deployed Hermes plugin at version `0.3.0`. Review the policy behavior and audit output before enabling it in a production Hermes profile. The project is intentionally conservative: when in doubt, it asks Hermes to ask you.
 
 ## Keywords
 

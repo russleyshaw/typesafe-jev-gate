@@ -7,16 +7,15 @@ from typing import Any
 
 from .audit import audit
 from .budget import BUDGET
-from .compaction import compact_tool_result
 from .config import PAID_TOOLS
 from .policy import _noul, evaluate_tool, risk, route_request
-from .redaction import action_summary, is_safe_fast_path, is_side_effecting
+from .redaction import action_summary, is_jev_candidate, is_safe_fast_path
 
 LOGGER = logging.getLogger("hermes.plugins.typesafe-jev-gate")
 
 
 def jev_gate(tool_name: str, args: dict[str, Any], **kwargs: Any) -> dict[str, str] | None:
-    if not is_side_effecting(tool_name, args) or is_safe_fast_path(tool_name, args):
+    if not is_jev_candidate(tool_name, args) or is_safe_fast_path(tool_name, args):
         return None
     budget = BUDGET.check(tool_name, args, str(kwargs.get("session_id", "")), str(kwargs.get("turn_id", "")))
     if budget:
@@ -76,21 +75,14 @@ def route_turn(user_message: str = "", **kwargs: Any) -> str | None:
 
 def audit_tool_call(tool_name: str, status: str = "", **kwargs: Any) -> None:
     del kwargs
-    if is_side_effecting(tool_name, {}):
+    if is_jev_candidate(tool_name, {}):
         audit({"tool": tool_name, "outcome": "completed", "status": status})
-
-
-def compact_tool_result_hook(result: Any, **kwargs: Any) -> Any:
-    """Strip ephemeral tool-output lines before they enter conversation history."""
-    del kwargs
-    return compact_tool_result(result)
 
 
 def register(ctx: Any) -> None:
     ctx.register_hook("pre_tool_call", jev_gate)
     ctx.register_hook("pre_llm_call", route_turn)
-    ctx.register_hook("transform_tool_result", compact_tool_result_hook)
     ctx.register_hook("post_tool_call", audit_tool_call)
 
 
-__all__ = ["audit_tool_call", "compact_tool_result_hook", "jev_gate", "register", "route_turn"]
+__all__ = ["audit_tool_call", "jev_gate", "register", "route_turn"]

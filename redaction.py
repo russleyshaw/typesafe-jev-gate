@@ -7,7 +7,7 @@ import json
 import re
 from typing import Any
 
-from .config import MAX_STRING, SIDE_EFFECT_TOOLS
+from .config import MAX_STRING, PAID_TOOLS, SIDE_EFFECT_TOOLS
 
 _SAFE_TERMINAL = re.compile(
     r"^\s*(?:pwd|date|whoami|git\s+(?:status|diff(?:\s+--stat)?|log(?:\s+-\d+)?))\s*$",
@@ -28,6 +28,16 @@ def is_side_effecting(tool_name: str, args: dict[str, Any]) -> bool:
         return True
     command = str(args.get("command", ""))
     return bool(command and re.search(r"(?i)\b(?:rm|mv|cp|chmod|chown|curl|wget|git\s+push|pip\s+install)\b", command))
+
+
+def is_jev_candidate(tool_name: str, args: dict[str, Any]) -> bool:
+    """Return whether Jev can add a useful policy signal before this call.
+
+    Jev is a typed decision model, not a replacement chat model.  In addition
+    to side effects, evaluate paid/external calls so secrets and unnecessary
+    spend can be caught before they leave the process.
+    """
+    return is_side_effecting(tool_name, args) or tool_name in PAID_TOOLS
 
 
 def is_safe_fast_path(tool_name: str, args: dict[str, Any]) -> bool:
@@ -69,6 +79,10 @@ def action_summary(tool_name: str, args: dict[str, Any]) -> str:
         return "generate or edit an image"
     if tool_name == "text_to_speech":
         return "generate speech audio"
+    if tool_name == "web_search":
+        return f"search the web for {redact(args).get('query', '[query unavailable]')}"
+    if tool_name == "web_extract":
+        return "extract content from external web pages"
     if tool_name.startswith("browser_vault_"):
         return "use saved website credentials or payment information"
     return f"execute {tool_name}"
