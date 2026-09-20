@@ -40,8 +40,7 @@ class TurnBudget:
             return {
                 "action": "approve",
                 "message": (
-                    f"Requested action: {action}. Jev budget guard: "
-                    "this turn has exceeded its Jev decision budget."
+                    f"Requested action: {action}. Jev budget guard: this turn has exceeded its Jev decision budget."
                 ),
             }
         if count > MAX_SIDE_EFFECTS_PER_TURN:

@@ -89,8 +89,12 @@ The gate can recommend allow, deny, or approval. It cannot override Hermes's exi
 | `client.py` | OpenRouter Decisions API client and short-lived cache |
 | `policy.py` | Jev request payloads and validated response parsing |
 | `budget.py` | Per-turn Jev, repetition, and side-effect budgets |
-| `hooks.py` | Hermes hook adapters and approval directives |
-| `__init__.py` | Minimal plugin entry point |
+- `hooks.py` | Hermes hook adapters and approval directives.
+- `features.py` | Bounded deterministic request-feature extraction and route safety checks.
+- `lifecycle.py` | Typed session, context, skill, quality, and audit-sampling decisions.
+- `evaluation.py` | Redacted offline routing corpus and evaluation metrics.
+- `metrics.py` | Privacy-safe p50/p95 latency and reliability report from audit metadata.
+- `__init__.py` | Minimal plugin entry point.
 
 ## Development
 
@@ -106,9 +110,15 @@ Run linting:
 uv run --with 'ruff>=0.16,<0.17' ruff check .
 ```
 
+Run the offline routing evaluation and inspect privacy-safe telemetry:
+
+```bash
+uv run python scripts/jev_report.py
+```
+
 ## Project status
 
-This plugin is experimental and currently tracks the deployed Hermes plugin at version `0.3.0`. Review the policy behavior and audit output before enabling it in a production Hermes profile. The project is intentionally conservative: when in doubt, it asks Hermes to ask you.
+This plugin is experimental and tracks the deployed Hermes plugin at version `0.4.0`. The roadmap contracts are implemented with bounded inputs, typed validation, deterministic fallbacks, offline route evaluation, and metadata-only latency/reliability reporting. Review the policy behavior and audit output before enabling it in a production Hermes profile. The project remains conservative: when in doubt, it asks Hermes to ask you.
 
 ## Keywords
 

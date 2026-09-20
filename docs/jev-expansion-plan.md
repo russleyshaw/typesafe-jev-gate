@@ -6,7 +6,7 @@ Use Jev (`cheap_model`, `~typesafe/jev-latest`) more broadly as a fast, typed de
 
 ## Current baseline
 
-- Plugin version: `0.3.0`; enabled in the active Hermes profile.
+- Plugin version: `0.4.0`; enabled in the active Hermes profile.
 - Transport: OpenRouter Decisions API at `https://openrouter.ai/api/alpha/decisions`.
 - Existing decisions:
   - `pre_tool_call`: redacted risk, secret-egress, prompt-injection, reversibility, paid-tool, repetition, and side-effect checks.
@@ -144,3 +144,29 @@ Run in `observe` mode first, compare Jev recommendations with the existing Herme
 - Routing is advisory and measurable; safety gates still fail closed into Hermes approval.
 - The plugin can be disabled without changing normal Hermes behavior.
 - A report from observe/advise rollout shows latency, reliability, quality, and cost impact before broader enablement.
+
+## Implementation status — 0.4.0
+
+The plugin now implements the roadmap contracts and local verification path:
+
+- Typed validation covers tool safety, route planning, preflight, and lifecycle decisions.
+- Request features, route abstention, offline routing evaluation, negative caching, privacy allowlisting, deterministic audit sampling, and p50/p95 telemetry are implemented.
+- Tool eligibility, external-data boundary, retry, batching, and approval-category fields are accepted and enforced only as advisory/escalation decisions, except reviewed narrow blocks.
+- Lifecycle decisions are available through `post_turn` when the host exposes `register_optional_hook`; deterministic local fallbacks remain available on Jev failure.
+- The remaining operational step is deployment in `observe`/`advise` mode to collect real human-approval, completion-quality, interruption, and spend-impact measurements. Those measurements cannot be fabricated by an offline test run.
+
+The repository's automated acceptance checks are the test suite, Ruff, and the offline routing corpus. Production rollout must retain the kill switch and review the resulting telemetry before enabling narrow enforcement.
+
+## 0.4.0 verification commands
+
+```bash
+uv run pytest
+uv run --with 'ruff>=0.16,<0.17' ruff check .
+uv run python scripts/jev_report.py
+```
+
+Expected local test result at release: `18 passed` and Ruff reports `All checks passed!`.
+
+### Rollout acceptance report
+
+The offline corpus verifies deterministic route safety and is not a substitute for a live rollout. Before production enforcement, collect the metrics listed above from metadata-only audit logs and compare Jev recommendations with Hermes's eventual approval and completion outcomes.

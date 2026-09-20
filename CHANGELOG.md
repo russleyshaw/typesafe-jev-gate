@@ -2,26 +2,27 @@
 
 All notable changes to the TypeSafe Jev Gate plugin are documented here.
 
-## [0.3.0] - 2026-09-20
+## [0.4.0] - 2026-09-20
 
 ### Added
 
-- Added bounded, redacted runtime context assembly for Jev decisions.
-- Added versioned typed decision contracts with validation for choices and scores.
-- Added typed preflight planning for route, toolset, context, compression, memory, skills, delegation, and retry choices.
-- Added an advisory decision brief for the main model.
-- Added separate per-turn Jev, repetition, and side-effect budgets.
-- Added broader preflight coverage for paid and external tools.
-- Added metadata-only audit records for preflight decisions and fallback outcomes.
+- Added bounded deterministic request-feature extraction and route safety abstention.
+- Added typed preflight choices for tool eligibility, external-data boundaries, retry strategy, batching, and approval reasons.
+- Added typed lifecycle decisions for session classification, context hygiene, skill suggestions, completion quality, and audit sampling.
+- Added optional `post_turn` lifecycle integration when the Hermes host exposes `register_optional_hook`.
+- Added a negative provider-failure cache to prevent retry storms.
+- Added privacy-safe p50/p95 telemetry aggregation from metadata-only audit records.
+- Added a small redacted offline routing corpus and deterministic evaluation.
 
 ### Changed
 
-- Expanded Jev decisions with bounded conversation, model, platform, user-message, tool-schema, and eligible-tool context.
-- Kept Jev input budgeting independent from output-token reservation.
-- Preserved fail-closed behavior: unavailable, malformed, or uncertain decisions escalate to Hermes approval.
-- Updated documentation and tests for the expanded policy and preflight behavior.
+- Added decision latency and schema metadata to audit records.
+- Added deterministic fallbacks for unavailable lifecycle decisions.
+- Expanded the documented architecture and development commands.
+- Bumped the plugin and Python package version to `0.4.0`.
 
-### Status
+### Verification
 
-- Published as an experimental plugin release.
-- The remaining roadmap in `docs/jev-expansion-plan.md` is not complete; routing evaluation, additional typed preflight contracts, lifecycle decisions, and rollout measurement remain future work.
+- 18 tests pass.
+- Ruff formatting and lint checks pass.
+- The roadmap contracts are implemented without allowing Jev to override Hermes hardline blocks or normal approvals.

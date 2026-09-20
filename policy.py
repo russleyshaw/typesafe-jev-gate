@@ -9,6 +9,7 @@ from typing import Any
 from .client import CLIENT
 from .context import decision_context
 from .decisions import DECISION_SCHEMA_VERSION, validate_plan_answers, validate_tool_answers
+from .features import extract_features
 from .redaction import redact
 
 
@@ -43,6 +44,46 @@ def evaluate_tool(tool_name: str, args: dict[str, Any], **hook_kwargs: Any) -> d
                 "instructions": "Rate action risk.",
                 "criteria": ["Read-only/harmless", "Reversible change", "Irreversible/external effect"],
             },
+            "eligibility": {
+                "type": "choice",
+                "instructions": "Choose whether the tool may run, needs Hermes approval, or must be blocked.",
+                "criteria": {
+                    "run": "Proceed",
+                    "ask_approval": "Escalate to Hermes",
+                    "block": "Deterministic safety block",
+                },
+            },
+            "external_data": {
+                "type": "choice",
+                "instructions": "Decide whether supplied data may cross the external boundary.",
+                "criteria": {"allow": "Allowed", "ask_approval": "Ask Hermes", "block": "Block"},
+            },
+            "retry": {
+                "type": "choice",
+                "instructions": "Choose recovery after a transient provider failure.",
+                "criteria": {
+                    "retry_same": "Retry once",
+                    "retry_simplified": "Simplify and retry",
+                    "escalate": "Escalate",
+                    "stop": "Stop",
+                },
+            },
+            "batching": {
+                "type": "choice",
+                "instructions": "Choose safe ordering for independent calls.",
+                "criteria": {"single": "Single", "parallel_safe": "Parallel safe", "sequential_required": "Sequential"},
+            },
+            "approval_reason": {
+                "type": "choice",
+                "instructions": "Choose a stable reason category for Hermes approval.",
+                "criteria": {
+                    "external_effect": "External effect",
+                    "sensitive_data": "Sensitive data",
+                    "irreversible": "Irreversible",
+                    "uncertain": "Uncertain",
+                    "budget": "Budget",
+                },
+            },
         },
     }
     key = "safety:" + hashlib.sha256(json.dumps(state, sort_keys=True, default=str).encode()).hexdigest()[:24]
@@ -53,6 +94,7 @@ def route_request(user_message: str, **hook_kwargs: Any) -> dict[str, Any]:
     state = decision_context(
         {
             "request": user_message,
+            "features": extract_features(user_message),
             "policy": "Choose the cheapest reliable route that preserves quality and safety.",
         },
         {"user_message": user_message, **hook_kwargs},

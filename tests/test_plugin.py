@@ -155,8 +155,18 @@ def test_preflight_plan_contains_all_choice_contracts(plugin, monkeypatch):
     client.CLIENT._post = post
     hooks.route_turn("Research this and decide whether to delegate the work")
     assert {
-        "route", "toolset", "tool_search", "context", "compression", "memory", "skills",
-        "delegation", "parallelism", "retry", "clarification", "completion",
+        "route",
+        "toolset",
+        "tool_search",
+        "context",
+        "compression",
+        "memory",
+        "skills",
+        "delegation",
+        "parallelism",
+        "retry",
+        "clarification",
+        "completion",
     } <= set(captured[0]["questions"])
     assert captured[0]["schema"] == "hermes.turn_plan.v1"
 
